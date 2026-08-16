@@ -1,0 +1,28 @@
+Creative Commons Attribution-ShareAlike 4.0 International
+
+This dictionary and the files in this repository are licensed under
+CC BY-SA 4.0.
+
+License text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+Summary: https://creativecommons.org/licenses/by-sa/4.0/
+
+You are free to share and adapt the material for any purpose, including
+commercially, if you give appropriate credit, indicate changes, and
+license adaptations under CC BY-SA 4.0.
+
+Attribution
+-----------
+
+This is a derived work. You must credit the original sources:
+
+1. Eesti Keele Instituut (EKI), Eesti-vene sõnaraamat (EVS).
+   Source: https://arhiiv.eki.ee/litsents/idkaart/evs/evs_EKI_CCBY40.xml
+   License: CC BY 4.0
+   https://creativecommons.org/licenses/by/4.0/
+
+2. Eesti Keele Instituut (EKI) via Ekilex, inflected Estonian forms,
+   packaged in Estonian-Wordlist-Enriched-Ekilex.
+   License: CC BY 4.0 (Ekilex) / CC BY-SA 4.0 (combined wordlist)
+
+Changes made in this project: conversion to Kobo dicthtml, stress-mark
+reformatting, trimmed examples, and extra lookup keys from inflected forms.
