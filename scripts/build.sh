@@ -22,7 +22,11 @@ if [[ ! -x "$DICTGEN" ]]; then
   else
     echo "Downloading dictgen binary..."
     case "$(uname -s)-$(uname -m)" in
-      Darwin-*) url="https://github.com/pgaskin/dictutil/releases/download/v0.3.2/dictgen-darwin-64bit" ;;
+      Darwin-arm64|Darwin-aarch64)
+        echo "Apple Silicon needs Go to build dictgen (no arm64 release binary)." >&2
+        exit 1
+        ;;
+      Darwin-x86_64|Darwin-amd64) url="https://github.com/pgaskin/dictutil/releases/download/v0.3.2/dictgen-darwin-64bit" ;;
       Linux-arm*|Linux-aarch64) url="https://github.com/pgaskin/dictutil/releases/download/v0.3.2/dictgen-linux-arm" ;;
       Linux-*) url="https://github.com/pgaskin/dictutil/releases/download/v0.3.2/dictgen-linux-64bit" ;;
       *) echo "Install Go and re-run, or place dictgen at $DICTGEN" >&2; exit 1 ;;

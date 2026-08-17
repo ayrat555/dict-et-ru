@@ -35,7 +35,9 @@ POS_LABELS = {
 VOWELS = set("аеёиоуыэюяАЕЁИОУЫЭЮЯaeiouyäöüõAEIOUYÄÖÜÕ")
 MAX_EXAMPLES_PER_SENSE = 6
 MAX_PHRASES = 4
-MAX_VARIANTS = 80
+MAX_VARIANTS = 120
+MIN_INFLECTION_HEADWORD_LEN = 3
+COMPACT_STRIP = str.maketrans("", "", "+-. ")
 
 
 def local_name(tag: str) -> str:
@@ -111,6 +113,55 @@ def clean_headword(text: str) -> str:
     return " ".join(text.split())
 
 
+def compact_spelling(text: str) -> str:
+    return text.translate(COMPACT_STRIP).casefold()
+
+
+def is_compact_variant(sort_key: str, word: str) -> bool:
+    return bool(sort_key) and sort_key != word and compact_spelling(sort_key) == compact_spelling(word)
+
+
+def attr(el: ET.Element, name: str) -> str:
+    return el.get(f"{{{NS_URI}}}{name}") or el.get(name) or ""
+
+
+def inflection_keys(word: str) -> list[str]:
+    compact = word.replace("-", "").replace(" ", "")
+    keys: list[str] = []
+    seen: set[str] = set()
+    for key in (word, word.casefold(), compact, compact.casefold()):
+        if key and key not in seen:
+            seen.add(key)
+            keys.append(key)
+    return keys
+
+
+def inflection_forms(word: str, inflections: dict[str, list[str]]) -> list[str]:
+    if len(word) < MIN_INFLECTION_HEADWORD_LEN:
+        return []
+    for key in inflection_keys(word):
+        forms = inflections.get(key)
+        if forms:
+            return forms
+    return []
+
+
+def collect_variants(entry: dict, inflections: dict[str, list[str]]) -> list[str]:
+    headword = entry["headwords"][0]
+    variants: list[str] = []
+    seen = {headword}
+    for extra in entry["headwords"][1:]:
+        if extra not in seen:
+            variants.append(extra)
+            seen.add(extra)
+    for key in entry["headwords"]:
+        for form in inflection_forms(key, inflections):
+            if form not in seen:
+                variants.append(form)
+                seen.add(form)
+    return variants[:MAX_VARIANTS]
+
+
 def iter_articles(path: Path):
     buf = ""
     with path.open(encoding="utf-8") as handle:
@@ -133,7 +184,7 @@ def iter_articles(path: Path):
 
 
 def parse_article_xml(article: str) -> ET.Element:
-    return ET.fromstring(ARTICLE_WRAP.format(article=article))
+    return ET.fromstring(ARTICLE_WRAP.replace("{article}", article))
 
 
 def gloss_from_xg(xg: ET.Element) -> str | None:
@@ -169,10 +220,16 @@ def parse_article(article: str) -> dict | None:
     pos_codes: list[str] = []
     for mg in children(head, "mg"):
         for m in children(mg, "m"):
-            raw = m.get(f"{{{NS_URI}}}O") or m.get("O") or text_of(m)
-            word = clean_headword(raw)
+            word = clean_headword(text_of(m) or attr(m, "O"))
             if word and word not in headwords:
                 headwords.append(word)
+            sort_key = clean_headword(attr(m, "O"))
+            if (
+                sort_key
+                and sort_key not in headwords
+                and is_compact_variant(sort_key, word)
+            ):
+                headwords.append(sort_key)
         for sl in children(mg, "sl"):
             code = clean_text(text_of(sl))
             if code and code not in pos_codes:
@@ -182,8 +239,13 @@ def parse_article(article: str) -> dict | None:
         return None
 
     senses: list[dict] = []
+    see: list[str] = []
     if senses_el is not None:
         for tp in children(senses_el, "tp"):
+            for tvt in children(tp, "tvt"):
+                target = clean_headword(text_of(tvt))
+                if target and target not in see:
+                    see.append(target)
             glosses: list[str] = []
             examples: list[tuple[str, str]] = []
             for tg in children(tp, "tg"):
@@ -194,6 +256,15 @@ def parse_article(article: str) -> dict | None:
                     gloss = gloss_from_xg(xg)
                     if gloss and gloss not in glosses:
                         glosses.append(gloss)
+            if not glosses:
+                for tg in children(tp, "tg"):
+                    dg = first(tg, "dg")
+                    if dg is None:
+                        continue
+                    for definition in children(dg, "d"):
+                        est = clean_text(text_of(definition))
+                        if est and est not in glosses:
+                            glosses.append(est)
             np = first(tp, "np")
             if np is not None:
                 for ng in children(np, "ng"):
@@ -224,7 +295,7 @@ def parse_article(article: str) -> dict | None:
             if et and rus and len(phrases) < MAX_PHRASES:
                 phrases.append((et, " / ".join(rus)))
 
-    if not senses and not phrases:
+    if not senses and not phrases and not see:
         return None
 
     return {
@@ -232,6 +303,7 @@ def parse_article(article: str) -> dict | None:
         "pos": pos_codes,
         "senses": senses,
         "phrases": phrases,
+        "see": see,
     }
 
 
@@ -295,18 +367,7 @@ def write_df(entries: list[dict], inflections: dict[str, list[str]], dest: Path)
             header = pos_header(entry["pos"])
             if header:
                 handle.write(f": {header}\n")
-            variants: list[str] = []
-            seen = {headword}
-            for extra in entry["headwords"][1:]:
-                if extra not in seen:
-                    variants.append(extra)
-                    seen.add(extra)
-            for key in entry["headwords"]:
-                for form in inflections.get(key, []):
-                    if form not in seen:
-                        variants.append(form)
-                        seen.add(form)
-            for variant in variants[:MAX_VARIANTS]:
+            for variant in collect_variants(entry, inflections):
                 handle.write(f"& {variant}\n")
             handle.write(render_definition(entry))
             handle.write("\n\n")
@@ -323,6 +384,7 @@ def merge_parsed(parsed: list[dict]) -> list[dict]:
                 "pos": list(item["pos"]),
                 "senses": list(item["senses"]),
                 "phrases": list(item["phrases"]),
+                "see": list(item.get("see", [])),
             }
             order.append(key)
             continue
@@ -335,7 +397,35 @@ def merge_parsed(parsed: list[dict]) -> list[dict]:
                 dest["pos"].append(code)
         dest["senses"].extend(item["senses"])
         dest["phrases"].extend(item["phrases"][: max(0, MAX_PHRASES - len(dest["phrases"]))])
+        for target in item.get("see", []):
+            if target not in dest["see"]:
+                dest["see"].append(target)
     return [grouped[key] for key in order]
+
+
+def resolve_see_also(entries: list[dict]) -> None:
+    by_head: dict[str, dict] = {}
+    for entry in entries:
+        for word in entry["headwords"]:
+            by_head.setdefault(word, entry)
+
+    for entry in entries:
+        if entry["senses"] or entry["phrases"]:
+            continue
+        resolved = False
+        for target in entry.get("see", []):
+            dest = by_head.get(target)
+            if dest is None or dest is entry:
+                continue
+            if dest["senses"] or dest["phrases"]:
+                entry["senses"] = [dict(sense) for sense in dest["senses"]]
+                room = max(0, MAX_PHRASES - len(entry["phrases"]))
+                entry["phrases"].extend(dest["phrases"][:room])
+                resolved = True
+                break
+        if not resolved and entry.get("see"):
+            target = entry["see"][0]
+            entry["senses"] = [{"glosses": [f"см. {target}"], "examples": []}]
 
 
 def main() -> int:
@@ -378,13 +468,18 @@ def main() -> int:
             print(f"  {index} articles, {len(parsed)} usable", flush=True)
 
     entries = merge_parsed(parsed)
+    resolve_see_also(entries)
     print(f"Parsed {len(parsed)} articles into {len(entries)} headwords ({errors} XML errors)")
 
     inflections: dict[str, list[str]] = {}
     if args.inflections.is_file():
         print(f"Loading inflections from {args.inflections} ...", flush=True)
         inflections = load_inflections(args.inflections)
-        matched = sum(1 for entry in entries if entry["headwords"][0] in inflections)
+        matched = sum(
+            1
+            for entry in entries
+            if any(inflection_forms(key, inflections) for key in entry["headwords"])
+        )
         print(f"  inflection rows {len(inflections)}, matched headwords {matched}")
 
     print(f"Writing {args.output} ...", flush=True)

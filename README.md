@@ -31,7 +31,7 @@ EVS XML is not included (about 85 MB). The build script downloads it from EKI.
 ./scripts/build.sh
 ```
 
-Requires `python3`, `curl`, and either Go or a [dictgen](https://github.com/pgaskin/dictutil) binary.
+Requires Python 3.10+, `curl`, and either Go or a [dictgen](https://github.com/pgaskin/dictutil) binary. On Apple Silicon, Go is required to build dictgen (there is no official arm64 binary).
 
 ## License
 
