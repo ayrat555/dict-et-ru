@@ -15,13 +15,15 @@ def article(
     *,
     o: str | None = None,
     sl: str | None = None,
+    mv: str | None = None,
     gloss: str | None = None,
     est: str | None = None,
     see: str | None = None,
 ) -> str:
     o_attr = f' x:O="{o}"' if o is not None else ""
     sl_el = f"<x:sl>{sl}</x:sl>" if sl else ""
-    parts = [f"<x:A><x:P><x:mg><x:m{o_attr}>{word}</x:m>{sl_el}</x:mg></x:P><x:S>"]
+    mv_el = f"<x:grg><x:mv>{mv}</x:mv></x:grg>" if mv else ""
+    parts = [f"<x:A><x:P><x:mg><x:m{o_attr}>{word}</x:m>{sl_el}{mv_el}</x:mg></x:P><x:S>"]
     if see:
         parts.append(f"<x:tp><x:tvt>{see}</x:tvt></x:tp>")
     if gloss or est:
@@ -89,6 +91,33 @@ class InflectionTests(unittest.TestCase):
         }
         variants = b.collect_variants(entry, {"aegajalt": ["aegajaldagi"]})
         self.assertEqual(variants, ["aegajaldagi"])
+
+
+class ParadigmTests(unittest.TestCase):
+    def test_cleans_noun_stems(self) -> None:
+        self.assertEqual(
+            b.clean_paradigm("aabe 'aape aabe[t -, aabe[te 'aape[id"),
+            "aabe aape aabet -, aabete aapeid",
+        )
+
+    def test_expands_compound_prefix(self) -> None:
+        self.assertEqual(
+            b.clean_paradigm("+k'ahvel k'ahvli k'ahvli[t", "aadama"),
+            "aadamakahvel aadamakahvli aadamakahvlit",
+        )
+
+    def test_shown_in_definition(self) -> None:
+        item = b.parse_article(
+            article(
+                "aabe",
+                sl="s",
+                mv="aabe 'aape aabe[t -, aabe[te 'aape[id",
+                gloss="буква",
+            )
+        )
+        self.assertEqual(item["paradigm"], "aabe aape aabet -, aabete aapeid")
+        html = b.render_definition(item)
+        self.assertIn("aabe aape aabet", html)
 
 
 class FallbackTests(unittest.TestCase):

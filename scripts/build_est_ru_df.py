@@ -113,6 +113,28 @@ def clean_headword(text: str) -> str:
     return " ".join(text.split())
 
 
+def compound_prefix(raw_headword: str) -> str:
+    if "+" not in raw_headword:
+        return ""
+    return clean_headword(raw_headword.rsplit("+", 1)[0])
+
+
+def clean_paradigm(raw: str, prefix: str = "") -> str:
+    text = html.unescape(raw)
+    text = text.replace("_&_", " / ").replace("&", " / ")
+    text = text.replace("'", "")
+    parts: list[str] = []
+    for token in text.split():
+        token = token.replace("[", "").replace("/", "")
+        token = token.lstrip("+")
+        if not token:
+            continue
+        if prefix and any(ch.isalpha() for ch in token) and not token.startswith(prefix):
+            token = prefix + token
+        parts.append(token)
+    return " ".join(parts)
+
+
 def compact_spelling(text: str) -> str:
     return text.translate(COMPACT_STRIP).casefold()
 
@@ -218,9 +240,14 @@ def parse_article(article: str) -> dict | None:
 
     headwords: list[str] = []
     pos_codes: list[str] = []
+    prefix = ""
+    paradigm = ""
     for mg in children(head, "mg"):
         for m in children(mg, "m"):
-            word = clean_headword(text_of(m) or attr(m, "O"))
+            raw_m = text_of(m)
+            if not prefix:
+                prefix = compound_prefix(raw_m)
+            word = clean_headword(raw_m or attr(m, "O"))
             if word and word not in headwords:
                 headwords.append(word)
             sort_key = clean_headword(attr(m, "O"))
@@ -234,6 +261,11 @@ def parse_article(article: str) -> dict | None:
             code = clean_text(text_of(sl))
             if code and code not in pos_codes:
                 pos_codes.append(code)
+        for grg in children(mg, "grg"):
+            mv = first(grg, "mv")
+            if mv is None or paradigm:
+                continue
+            paradigm = clean_paradigm(text_of(mv), prefix)
 
     if not headwords:
         return None
@@ -304,6 +336,7 @@ def parse_article(article: str) -> dict | None:
         "senses": senses,
         "phrases": phrases,
         "see": see,
+        "paradigm": paradigm,
     }
 
 
@@ -343,6 +376,8 @@ def html_escape(text: str) -> str:
 
 def render_definition(entry: dict) -> str:
     parts = ["<html>"]
+    if entry.get("paradigm"):
+        parts.append(f"<p><i>{html_escape(entry['paradigm'])}</i></p>")
     for index, sense in enumerate(entry["senses"], start=1):
         gloss = "; ".join(sense["glosses"])
         prefix = f"{index}. " if len(entry["senses"]) > 1 else ""
@@ -385,6 +420,7 @@ def merge_parsed(parsed: list[dict]) -> list[dict]:
                 "senses": list(item["senses"]),
                 "phrases": list(item["phrases"]),
                 "see": list(item.get("see", [])),
+                "paradigm": item.get("paradigm") or "",
             }
             order.append(key)
             continue
@@ -400,6 +436,8 @@ def merge_parsed(parsed: list[dict]) -> list[dict]:
         for target in item.get("see", []):
             if target not in dest["see"]:
                 dest["see"].append(target)
+        if not dest.get("paradigm") and item.get("paradigm"):
+            dest["paradigm"] = item["paradigm"]
     return [grouped[key] for key in order]
 
 
@@ -421,6 +459,8 @@ def resolve_see_also(entries: list[dict]) -> None:
                 entry["senses"] = [dict(sense) for sense in dest["senses"]]
                 room = max(0, MAX_PHRASES - len(entry["phrases"]))
                 entry["phrases"].extend(dest["phrases"][:room])
+                if not entry.get("paradigm") and dest.get("paradigm"):
+                    entry["paradigm"] = dest["paradigm"]
                 resolved = True
                 break
         if not resolved and entry.get("see"):
