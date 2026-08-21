@@ -37,6 +37,8 @@ MAX_EXAMPLES_PER_SENSE = 6
 MAX_PHRASES = 4
 MAX_VARIANTS = 120
 MIN_INFLECTION_HEADWORD_LEN = 3
+MIN_ALIAS_HEADWORD_LEN = 4
+VERB_POS = {"v", "vrm"}
 COMPACT_STRIP = str.maketrans("", "", "+-. ")
 
 
@@ -374,8 +376,25 @@ def html_escape(text: str) -> str:
     return html.escape(text, quote=False)
 
 
-def render_definition(entry: dict) -> str:
+def is_alias_headword(variant: str, parents: list[dict], headwords: set[str]) -> bool:
+    """Promote inflections that people type into a dictionary search box.
+
+    Kobo/Kindle/StarDict in-book lookup already follows ``&`` variants, but
+    typed search often only matches ``@`` headwords. Verb forms (olla, oldud,
+    olles, kirjutatud, …) are routinely searched as if they were lemmas;
+    noun case forms are not — and there are ~2M of those.
+    """
+    if variant in headwords or len(variant) < MIN_ALIAS_HEADWORD_LEN:
+        return False
+    if len(parents) > 1:
+        return True
+    return any(code in VERB_POS for code in parents[0]["pos"])
+
+
+def render_definition(entry: dict, *, see_lemma: str | None = None) -> str:
     parts = ["<html>"]
+    if see_lemma:
+        parts.append(f"<p><i>{html_escape(see_lemma)}</i></p>")
     if entry.get("paradigm"):
         parts.append(f"<p><i>{html_escape(entry['paradigm'])}</i></p>")
     for index, sense in enumerate(entry["senses"], start=1):
@@ -395,17 +414,35 @@ def render_definition(entry: dict) -> str:
 
 def write_df(entries: list[dict], inflections: dict[str, list[str]], dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
+    headwords = {entry["headwords"][0] for entry in entries}
+    owners: dict[str, list[dict]] = {}
     with dest.open("w", encoding="utf-8") as handle:
         for entry in entries:
             headword = entry["headwords"][0]
+            variants = collect_variants(entry, inflections)
             handle.write(f"@ {headword}\n")
             header = pos_header(entry["pos"])
             if header:
                 handle.write(f": {header}\n")
-            for variant in collect_variants(entry, inflections):
+            for variant in variants:
                 handle.write(f"& {variant}\n")
+                owners.setdefault(variant, []).append(entry)
             handle.write(render_definition(entry))
             handle.write("\n\n")
+
+        for variant, parents in owners.items():
+            if not is_alias_headword(variant, parents, headwords):
+                continue
+            for parent in parents:
+                handle.write(f"@ {variant}\n")
+                header = pos_header(parent["pos"])
+                if header:
+                    handle.write(f": {header}\n")
+                handle.write(
+                    render_definition(parent, see_lemma=parent["headwords"][0])
+                )
+                handle.write("\n\n")
+            headwords.add(variant)
 
 
 def merge_parsed(parsed: list[dict]) -> list[dict]:

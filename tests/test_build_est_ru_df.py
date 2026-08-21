@@ -167,6 +167,72 @@ class WriteDfTests(unittest.TestCase):
         self.assertIn("@ a\n", text)
         self.assertNotIn("& aga\n", text)
 
+    def test_verb_forms_become_searchable_headwords(self) -> None:
+        entries = [
+            {
+                "headwords": ["olema"],
+                "pos": ["v"],
+                "senses": [{"glosses": ["быть"], "examples": []}],
+                "phrases": [],
+            },
+            {
+                "headwords": ["olnu"],
+                "pos": ["s"],
+                "senses": [{"glosses": ["прошлое"], "examples": []}],
+                "phrases": [],
+            },
+            {
+                "headwords": ["raamat"],
+                "pos": ["s"],
+                "senses": [{"glosses": ["книга"], "examples": []}],
+                "phrases": [],
+            },
+        ]
+        inflections = {
+            "olema": ["olnud", "oldud", "olla", "olles", "oli"],
+            "olnu": ["olnud", "olnut"],
+            "raamat": ["raamatut", "raamatud"],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "out.df"
+            b.write_df(entries, inflections, dest)
+            text = dest.read_text(encoding="utf-8")
+        self.assertGreaterEqual(text.count("@ olnud\n"), 2)
+        self.assertIn("быть", text[text.find("@ olnud\n") :])
+        self.assertIn("@ oldud\n", text)
+        self.assertIn("@ olla\n", text)
+        self.assertIn("@ olles\n", text)
+        self.assertNotIn("@ oli\n", text)
+        self.assertNotIn("@ olnut\n", text)
+        self.assertNotIn("@ raamatut\n", text)
+        self.assertNotIn("@ raamatud\n", text)
+
+    def test_shared_noun_form_becomes_searchable_headword(self) -> None:
+        entries = [
+            {
+                "headwords": ["kand"],
+                "pos": ["s"],
+                "senses": [{"glosses": ["пятка"], "examples": []}],
+                "phrases": [],
+            },
+            {
+                "headwords": ["kant"],
+                "pos": ["s"],
+                "senses": [{"glosses": ["кант"], "examples": []}],
+                "phrases": [],
+            },
+        ]
+        inflections = {
+            "kand": ["kanna", "kanda"],
+            "kant": ["kandi", "kanda"],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "out.df"
+            b.write_df(entries, inflections, dest)
+            text = dest.read_text(encoding="utf-8")
+        self.assertGreaterEqual(text.count("@ kanda\n"), 2)
+        self.assertNotIn("@ kanna\n", text)
+
 
 if __name__ == "__main__":
     unittest.main()
