@@ -6,7 +6,7 @@ Kobo-, Kindle-, and StarDict-compatible Estonian→Russian dictionaries built fr
 
 ### Kobo
 
-Copy [`dicthtml-et-ru.zip`](dicthtml-et-ru.zip) to the reader:
+Copy [`out/dicthtml-et-ru.zip`](out/dicthtml-et-ru.zip) to the reader:
 
 ```text
 KOBOeReader/.kobo/custom-dict/dicthtml-et-ru.zip
@@ -18,7 +18,7 @@ Firmware 4.24+ loads `dicthtml-LOCALE.zip` from `.kobo/custom-dict`. Older firmw
 
 ### Kindle
 
-Copy [`dict-et-ru.mobi`](dict-et-ru.mobi) to the Kindle `documents` folder, then set it as the Estonian dictionary:
+Copy [`out/dict-et-ru.mobi`](out/dict-et-ru.mobi) to the Kindle `documents` folder, then set it as the Estonian dictionary:
 
 ```text
 Settings → Language & Dictionaries → Dictionaries
@@ -26,15 +26,15 @@ Settings → Language & Dictionaries → Dictionaries
 
 ### StarDict / KOReader / GoldenDict
 
-Copy the [`stardict-et-ru`](stardict-et-ru) folder (`.ifo`, `.idx`, `.dict`, `.syn`) into the reader’s StarDict directory.
+Copy the [`out/stardict-et-ru`](out/stardict-et-ru) folder (`.ifo`, `.idx`, `.dict`, `.syn`) into the reader’s StarDict directory.
 
 ## Contents
 
 | File | Role |
 |------|------|
-| `dicthtml-et-ru.zip` | Ready-to-install Kobo dictionary |
-| `dict-et-ru.mobi` | Ready-to-install Kindle dictionary |
-| `stardict-et-ru/` | StarDict bundle for KOReader, GoldenDict, sdcv |
+| `out/dicthtml-et-ru.zip` | Ready-to-install Kobo dictionary |
+| `out/dict-et-ru.mobi` | Ready-to-install Kindle dictionary |
+| `out/stardict-et-ru/` | StarDict bundle for KOReader, GoldenDict, sdcv |
 | `data/est_inflected_forms.tsv` | Inflected forms used as extra lookup keys |
 | `scripts/build.sh` | Download EVS XML, rebuild the Kobo zip |
 | `scripts/build_est_ru_df.py` | EVS + inflections → dictutil `.df` |
@@ -60,6 +60,8 @@ Kindle or StarDict (both read the Kobo zip):
 ```
 
 Kobo build needs Python 3.10+, `curl`, and either Go or a [dictgen](https://github.com/pgaskin/dictutil) binary. On Apple Silicon, Go is required to build dictgen (there is no official arm64 binary).
+
+Installable dictionaries land in `out/`. Intermediate `.df` and Kindle OPF/XHTML stay in `dist/` (gitignored).
 
 Kindle and StarDict builds need the Kobo zip plus [kindling-cli](https://github.com/ciscoriordan/kindling) (the scripts download it). StarDict reuses the Kindle OPF if it is already in `dist/kindle`.
 

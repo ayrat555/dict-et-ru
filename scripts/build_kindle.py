@@ -240,8 +240,8 @@ def main() -> int:
     parser.add_argument(
         "--kobo",
         type=Path,
-        default=repo / "dicthtml-et-ru.zip",
-        help="Kobo dicthtml zip (default: dicthtml-et-ru.zip)",
+        default=repo / "out/dicthtml-et-ru.zip",
+        help="Kobo dicthtml zip (default: out/dicthtml-et-ru.zip)",
     )
     parser.add_argument("--outdir", type=Path, default=repo / "dist/kindle")
     args = parser.parse_args()

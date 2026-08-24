@@ -4,9 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CACHE="$ROOT/cache"
 DIST="$ROOT/dist"
+OUT="$ROOT/out"
 EVS_URL="https://arhiiv.eki.ee/litsents/idkaart/evs/evs_EKI_CCBY40.xml"
 
-mkdir -p "$CACHE" "$DIST" "$ROOT/cache/bin"
+mkdir -p "$CACHE" "$DIST" "$OUT" "$ROOT/cache/bin"
 
 EVS="$CACHE/evs_EKI_CCBY40.xml"
 if [[ ! -s "$EVS" ]]; then
@@ -43,5 +44,5 @@ python3 "$ROOT/scripts/build_est_ru_df.py" \
   --output "$DIST/est-ru.df"
 
 echo "Generating Kobo dictionary..."
-"$DICTGEN" -o "$ROOT/dicthtml-et-ru.zip" "$DIST/est-ru.df"
-echo "Wrote $ROOT/dicthtml-et-ru.zip"
+"$DICTGEN" -o "$OUT/dicthtml-et-ru.zip" "$DIST/est-ru.df"
+echo "Wrote $OUT/dicthtml-et-ru.zip"

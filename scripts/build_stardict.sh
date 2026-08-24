@@ -4,9 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CACHE="$ROOT/cache"
 DIST="$ROOT/dist"
-KOBO="${1:-$ROOT/dicthtml-et-ru.zip}"
+OUT="$ROOT/out"
+KOBO="${1:-$OUT/dicthtml-et-ru.zip}"
 OPF="$DIST/kindle/dict.opf"
-OUT="$ROOT/stardict-et-ru"
+STARDICT="$OUT/stardict-et-ru"
 
 if [[ ! -s "$KOBO" ]]; then
   echo "Kobo dictionary not found: $KOBO" >&2
@@ -14,7 +15,7 @@ if [[ ! -s "$KOBO" ]]; then
   exit 1
 fi
 
-mkdir -p "$CACHE/bin" "$DIST"
+mkdir -p "$CACHE/bin" "$DIST" "$OUT"
 
 KINDLING="$ROOT/cache/bin/kindling-cli"
 if [[ ! -x "$KINDLING" ]]; then
@@ -42,8 +43,8 @@ if [[ ! -f "$OPF" ]]; then
 fi
 
 echo "Generating StarDict dictionary..."
-"$KINDLING" stardict "$OPF" -o "$OUT" \
+"$KINDLING" stardict "$OPF" -o "$STARDICT" \
   --bookname "Eesti-vene sõnaraamat (et-ru)" \
   --author "Eesti Keele Instituut" \
   --description "CC BY-SA 4.0. Derived from EKI Eesti-vene sõnaraamat."
-echo "Wrote $OUT"
+echo "Wrote $STARDICT"

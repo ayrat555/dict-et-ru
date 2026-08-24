@@ -4,7 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CACHE="$ROOT/cache"
 DIST="$ROOT/dist"
-KOBO="${1:-$ROOT/dicthtml-et-ru.zip}"
+OUT="$ROOT/out"
+KOBO="${1:-$OUT/dicthtml-et-ru.zip}"
 
 if [[ ! -s "$KOBO" ]]; then
   echo "Kobo dictionary not found: $KOBO" >&2
@@ -12,7 +13,7 @@ if [[ ! -s "$KOBO" ]]; then
   exit 1
 fi
 
-mkdir -p "$CACHE/bin" "$DIST"
+mkdir -p "$CACHE/bin" "$DIST" "$OUT"
 
 KINDLING="$ROOT/cache/bin/kindling-cli"
 if [[ ! -x "$KINDLING" ]]; then
@@ -38,5 +39,5 @@ echo "Building Kindle source from $KOBO ..."
 python3 "$ROOT/scripts/build_kindle.py" --kobo "$KOBO" --outdir "$DIST/kindle"
 
 echo "Generating Kindle dictionary..."
-"$KINDLING" build "$DIST/kindle/dict.opf" -o "$ROOT/dict-et-ru.mobi"
-echo "Wrote $ROOT/dict-et-ru.mobi"
+"$KINDLING" build "$DIST/kindle/dict.opf" -o "$OUT/dict-et-ru.mobi"
+echo "Wrote $OUT/dict-et-ru.mobi"
