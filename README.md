@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/kobo-et-ru-logo.png" alt="Open book in the blue, black, and white colors of the Estonian flag" width="420">
+</p>
+
 # Estonian–Russian dictionary (Kobo and Kindle)
 
 Kobo-, Kindle-, and StarDict-compatible Estonian→Russian dictionaries built from the official EKI Estonian–Russian Dictionary, with extra inflection lookup so declined and conjugated forms resolve in books.
