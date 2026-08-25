@@ -39,35 +39,8 @@ Unzip [`out/stardict-et-ru.zip`](out/stardict-et-ru.zip) and copy the `stardict-
 | `out/dicthtml-et-ru.zip` | Ready-to-install Kobo dictionary |
 | `out/dict-et-ru.mobi.zip` | Kindle dictionary (unzip, then copy the `.mobi`) |
 | `out/stardict-et-ru.zip` | StarDict bundle for KOReader, GoldenDict, sdcv (unzip first) |
-| `data/est_inflected_forms.tsv` | Inflected forms used as extra lookup keys |
-| `scripts/build.sh` | Download EVS XML, rebuild the Kobo zip |
-| `scripts/build_est_ru_df.py` | EVS + inflections → dictutil `.df` |
-| `scripts/build_kindle.sh` | Kobo zip → Kindle MOBI |
-| `scripts/build_kindle.py` | Kobo zip → Kindle OPF/XHTML |
-| `scripts/build_stardict.sh` | Kobo zip / Kindle OPF → StarDict |
 
-EVS XML is not included (about 85 MB). The build script downloads it from EKI.
-
-## Rebuild
-
-Kobo:
-
-```bash
-./scripts/build.sh
-```
-
-Kindle or StarDict (both read the Kobo zip):
-
-```bash
-./scripts/build_kindle.sh
-./scripts/build_stardict.sh
-```
-
-Kobo build needs Python 3.10+, `curl`, and either Go or a [dictgen](https://github.com/pgaskin/dictutil) binary. On Apple Silicon, Go is required to build dictgen (there is no official arm64 binary).
-
-Installable dictionaries land in `out/`. Intermediate `.df` and Kindle OPF/XHTML stay in `dist/` (gitignored).
-
-Kindle and StarDict builds need the Kobo zip plus [kindling-cli](https://github.com/ciscoriordan/kindling) (the scripts download it). StarDict reuses the Kindle OPF if it is already in `dist/kindle`.
+How the files are produced: [docs/build.md](docs/build.md).
 
 ## License
 
