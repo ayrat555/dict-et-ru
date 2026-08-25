@@ -4,5 +4,5 @@ __pycache__/
 cache/
 dist/
 out/dict-et-ru.mobi
-out/stardict-et-ru/*.dict
+out/stardict-et-ru/
 *.df

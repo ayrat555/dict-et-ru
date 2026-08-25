@@ -2,7 +2,7 @@
   <img src="assets/kobo-et-ru-logo.png" alt="Open book in the blue, black, and white colors of the Estonian flag" width="420">
 </p>
 
-# Estonian–Russian dictionary (Kobo and Kindle)
+# Estonian–Russian dictionary (Kobo, Kindle, StarDict)
 
 Kobo-, Kindle-, and StarDict-compatible Estonian→Russian dictionaries built from the official EKI Estonian–Russian Dictionary, with extra inflection lookup so declined and conjugated forms resolve in books.
 
@@ -30,7 +30,7 @@ Settings → Language & Dictionaries → Dictionaries
 
 ### StarDict / KOReader / GoldenDict
 
-Copy the [`out/stardict-et-ru`](out/stardict-et-ru) folder (`.ifo`, `.idx`, `.dict.dz`, `.syn`) into the reader’s StarDict directory.
+Unzip [`out/stardict-et-ru.zip`](out/stardict-et-ru.zip) and copy the `stardict-et-ru` folder into the reader’s StarDict directory.
 
 ## Contents
 
@@ -38,7 +38,7 @@ Copy the [`out/stardict-et-ru`](out/stardict-et-ru) folder (`.ifo`, `.idx`, `.di
 |------|------|
 | `out/dicthtml-et-ru.zip` | Ready-to-install Kobo dictionary |
 | `out/dict-et-ru.mobi.zip` | Kindle dictionary (unzip, then copy the `.mobi`) |
-| `out/stardict-et-ru/` | StarDict bundle for KOReader, GoldenDict, sdcv |
+| `out/stardict-et-ru.zip` | StarDict bundle for KOReader, GoldenDict, sdcv (unzip first) |
 | `data/est_inflected_forms.tsv` | Inflected forms used as extra lookup keys |
 | `scripts/build.sh` | Download EVS XML, rebuild the Kobo zip |
 | `scripts/build_est_ru_df.py` | EVS + inflections → dictutil `.df` |

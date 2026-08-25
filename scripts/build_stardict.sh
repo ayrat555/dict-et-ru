@@ -52,4 +52,6 @@ if [[ -f "$DICT" ]]; then
   gzip -9 -n -c "$DICT" > "$DICT.dz"
   rm -f "$DICT"
 fi
-echo "Wrote $STARDICT"
+rm -f "$OUT/stardict-et-ru.zip"
+(cd "$OUT" && zip -9 -r stardict-et-ru.zip stardict-et-ru -x '*.dict' -x '*.DS_Store')
+echo "Wrote $OUT/stardict-et-ru.zip"
