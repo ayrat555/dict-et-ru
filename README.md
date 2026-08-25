@@ -22,7 +22,7 @@ Firmware 4.24+ loads `dicthtml-LOCALE.zip` from `.kobo/custom-dict`. Older firmw
 
 ### Kindle
 
-Copy [`out/dict-et-ru.mobi`](out/dict-et-ru.mobi) to the Kindle `documents` folder, then set it as the Estonian dictionary:
+Unzip [`out/dict-et-ru.mobi.zip`](out/dict-et-ru.mobi.zip) and copy `dict-et-ru.mobi` to the Kindle `documents` folder, then set it as the Estonian dictionary:
 
 ```text
 Settings → Language & Dictionaries → Dictionaries
@@ -30,14 +30,14 @@ Settings → Language & Dictionaries → Dictionaries
 
 ### StarDict / KOReader / GoldenDict
 
-Copy the [`out/stardict-et-ru`](out/stardict-et-ru) folder (`.ifo`, `.idx`, `.dict`, `.syn`) into the reader’s StarDict directory.
+Copy the [`out/stardict-et-ru`](out/stardict-et-ru) folder (`.ifo`, `.idx`, `.dict.dz`, `.syn`) into the reader’s StarDict directory.
 
 ## Contents
 
 | File | Role |
 |------|------|
 | `out/dicthtml-et-ru.zip` | Ready-to-install Kobo dictionary |
-| `out/dict-et-ru.mobi` | Ready-to-install Kindle dictionary |
+| `out/dict-et-ru.mobi.zip` | Kindle dictionary (unzip, then copy the `.mobi`) |
 | `out/stardict-et-ru/` | StarDict bundle for KOReader, GoldenDict, sdcv |
 | `data/est_inflected_forms.tsv` | Inflected forms used as extra lookup keys |
 | `scripts/build.sh` | Download EVS XML, rebuild the Kobo zip |

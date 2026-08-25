@@ -47,4 +47,9 @@ echo "Generating StarDict dictionary..."
   --bookname "Eesti-vene sõnaraamat (et-ru)" \
   --author "Eesti Keele Instituut" \
   --description "CC BY-SA 4.0. Derived from EKI Eesti-vene sõnaraamat."
+DICT="$STARDICT/stardict-et-ru.dict"
+if [[ -f "$DICT" ]]; then
+  gzip -9 -n -c "$DICT" > "$DICT.dz"
+  rm -f "$DICT"
+fi
 echo "Wrote $STARDICT"

@@ -40,4 +40,6 @@ python3 "$ROOT/scripts/build_kindle.py" --kobo "$KOBO" --outdir "$DIST/kindle"
 
 echo "Generating Kindle dictionary..."
 "$KINDLING" build "$DIST/kindle/dict.opf" -o "$OUT/dict-et-ru.mobi"
-echo "Wrote $OUT/dict-et-ru.mobi"
+rm -f "$OUT/dict-et-ru.mobi.zip"
+zip -9 -j "$OUT/dict-et-ru.mobi.zip" "$OUT/dict-et-ru.mobi"
+echo "Wrote $OUT/dict-et-ru.mobi.zip"
