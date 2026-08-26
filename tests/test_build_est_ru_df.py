@@ -202,10 +202,37 @@ class WriteDfTests(unittest.TestCase):
         self.assertIn("@ oldud\n", text)
         self.assertIn("@ olla\n", text)
         self.assertIn("@ olles\n", text)
-        self.assertNotIn("@ oli\n", text)
+        self.assertIn("@ oli\n", text)
         self.assertNotIn("@ olnut\n", text)
         self.assertNotIn("@ raamatut\n", text)
         self.assertNotIn("@ raamatud\n", text)
+
+    def test_three_letter_verb_form_aliases_existing_noun(self) -> None:
+        entries = [
+            {
+                "headwords": ["saama"],
+                "pos": ["v"],
+                "senses": [{"glosses": ["получать"], "examples": []}],
+                "phrases": [],
+            },
+            {
+                "headwords": ["sai"],
+                "pos": ["s"],
+                "senses": [{"glosses": ["булка"], "examples": []}],
+                "phrases": [],
+            },
+        ]
+        inflections = {
+            "saama": ["sai", "on"],
+            "sai": ["saia"],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "out.df"
+            b.write_df(entries, inflections, dest)
+            text = dest.read_text(encoding="utf-8")
+        self.assertGreaterEqual(text.count("@ sai\n"), 2)
+        self.assertIn("получать", text[text.find("@ sai\n") :])
+        self.assertNotIn("@ on\n", text)
 
     def test_shared_noun_form_becomes_searchable_headword(self) -> None:
         entries = [

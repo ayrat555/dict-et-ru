@@ -39,6 +39,25 @@ class ParseKoboTests(unittest.TestCase):
         self.assertEqual([item["headword"] for item in entries], ["aabe", "24/7"])
         self.assertEqual(entries[0]["variants"], ["aape", "aabet"])
 
+    def test_merges_homograph_bodies(self) -> None:
+        html = (
+            '<html><w><p><a name="sai" /><b>sai</b> сущ.</p><var></var>'
+            "<p><b>булка</b></p></w>"
+            '<w><p><a name="sai" /><b>sai</b> гл.</p><var></var>'
+            "<p><i>saama</i></p><p><b>получать</b></p></w></html>"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            zip_path = Path(tmp) / "dicthtml.zip"
+            with zipfile.ZipFile(zip_path, "w") as archive:
+                archive.writestr("sa.html", gzip.compress(html.encode("utf-8")))
+            entries = k.parse_kobo_zip(zip_path)
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["headword"], "sai")
+        self.assertEqual(entries[0]["pos"], "сущ., гл.")
+        self.assertIn("булка", entries[0]["body"])
+        self.assertIn("получать", entries[0]["body"])
+        self.assertIn("saama", entries[0]["body"])
+
 
 class KindleSourceTests(unittest.TestCase):
     def test_entry_has_orth_and_inflections(self) -> None:

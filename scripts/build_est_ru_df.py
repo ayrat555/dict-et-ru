@@ -37,7 +37,7 @@ MAX_EXAMPLES_PER_SENSE = 6
 MAX_PHRASES = 4
 MAX_VARIANTS = 120
 MIN_INFLECTION_HEADWORD_LEN = 3
-MIN_ALIAS_HEADWORD_LEN = 4
+MIN_ALIAS_HEADWORD_LEN = 3
 VERB_POS = {"v", "vrm"}
 COMPACT_STRIP = str.maketrans("", "", "+-. ")
 
@@ -380,15 +380,22 @@ def is_alias_headword(variant: str, parents: list[dict], headwords: set[str]) ->
     """Promote inflections that people type into a dictionary search box.
 
     Kobo/Kindle/StarDict in-book lookup already follows ``&`` variants, but
-    typed search often only matches ``@`` headwords. Verb forms (olla, oldud,
-    olles, kirjutatud, …) are routinely searched as if they were lemmas;
+    typed search often only matches ``@`` headwords. Verb forms (olla, oli,
+    sai, kirjutatud, …) are routinely searched as if they were lemmas;
     noun case forms are not — and there are ~2M of those.
     """
-    if variant in headwords or len(variant) < MIN_ALIAS_HEADWORD_LEN:
+    if len(variant) < MIN_ALIAS_HEADWORD_LEN:
         return False
-    if len(parents) > 1:
+    verb_form = any(
+        any(code in VERB_POS for code in parent["pos"])
+        and parent["headwords"][0] != variant
+        for parent in parents
+    )
+    if verb_form:
         return True
-    return any(code in VERB_POS for code in parents[0]["pos"])
+    if variant in headwords:
+        return False
+    return len(parents) > 1
 
 
 def render_definition(entry: dict, *, see_lemma: str | None = None) -> str:

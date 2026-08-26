@@ -42,12 +42,12 @@ Each article in the `.df` has:
 - `&` — inflection variants from the TSV (and a compact unhyphenated spelling when the printed form has hyphens). Lemmas shorter than 3 letters get no inflections, so `a` does not steal `aga`.
 - Extra `@` **aliases** for forms people type into a dictionary search box. In-book tap already follows `&` variants; typed search often only matches `@` headwords.
 
-A variant becomes an alias when it is not already a headword, is at least 4 letters, and either:
+A variant becomes an alias when it is at least 3 letters and either:
 
 - belongs to more than one lemma, or
 - belongs to a verb (`v` / `vrm`).
 
-That covers `olnud`, `olla`, `olles`, `kirjutatud`, and similar forms. Ordinary noun cases (`raamatut`) stay as `&` only — there are about two million of those.
+That covers `olnud`, `olla`, `oli`, `sai`, `kirjutatud`, and similar forms. A verb form still gets an alias when the same spelling is already another lemma (`sai` the noun vs `saama`). Ordinary noun cases (`raamatut`) stay as `&` only — there are about two million of those. Two-letter forms (`on`) are not promoted.
 
 Alias articles copy the parent definition and start with the lemma in italics (`olema`, `olnu`, …).
 

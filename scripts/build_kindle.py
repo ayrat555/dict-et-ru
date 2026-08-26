@@ -86,10 +86,14 @@ def parse_kobo_zip(path: Path) -> list[dict]:
                 for variant in item["variants"]:
                     if variant not in dest["variants"]:
                         dest["variants"].append(variant)
-                if not dest["body"] and item["body"]:
-                    dest["body"] = item["body"]
-                if not dest["pos"] and item["pos"]:
-                    dest["pos"] = item["pos"]
+                if item["body"] and item["body"] not in (dest.get("body") or ""):
+                    dest["body"] = (
+                        f"{dest['body']}\n{item['body']}" if dest.get("body") else item["body"]
+                    )
+                if item["pos"] and item["pos"] not in dest["pos"]:
+                    dest["pos"] = (
+                        f"{dest['pos']}, {item['pos']}" if dest["pos"] else item["pos"]
+                    )
     return [grouped[key] for key in order]
 
 
