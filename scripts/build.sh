@@ -38,7 +38,8 @@ if [[ ! -x "$DICTGEN" ]]; then
 fi
 
 echo "Building dictfile..."
-python3 "$ROOT/scripts/build_est_ru_df.py" \
+cargo build --release --manifest-path "$ROOT/Cargo.toml" --bin build-est-ru-df
+"$ROOT/target/release/build-est-ru-df" \
   --evs "$EVS" \
   --inflections "$ROOT/data/est_inflected_forms.tsv" \
   --output "$DIST/est-ru.df"

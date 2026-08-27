@@ -1,0 +1,23 @@
+[package]
+name = "kobo-et-ru"
+version = "0.1.0"
+edition = "2021"
+description = "Build Estonian–Russian dictionary sources for Kobo, Kindle, and StarDict"
+
+[[bin]]
+name = "build-est-ru-df"
+path = "src/bin/build-est-ru-df.rs"
+
+[[bin]]
+name = "build-kindle"
+path = "src/bin/build-kindle.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+crc32fast = "1"
+flate2 = { version = "1", features = ["zlib"] }
+html-escape = "0.2"
+indexmap = "2"
+regex = "1"
+roxmltree = "0.20"
+zip = { version = "2", default-features = false, features = ["deflate"] }

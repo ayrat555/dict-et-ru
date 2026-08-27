@@ -1,6 +1,7 @@
 .DS_Store
 __pycache__/
 *.pyc
+/target/
 cache/
 dist/
 out/dict-et-ru.mobi

@@ -39,7 +39,8 @@ fi
 
 if [[ ! -f "$OPF" ]]; then
   echo "Building dictionary source from $KOBO ..."
-  python3 "$ROOT/scripts/build_kindle.py" --kobo "$KOBO" --outdir "$DIST/kindle"
+  cargo build --release --manifest-path "$ROOT/Cargo.toml" --bin build-kindle
+  "$ROOT/target/release/build-kindle" --kobo "$KOBO" --outdir "$DIST/kindle"
 fi
 
 echo "Generating StarDict dictionary..."

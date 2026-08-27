@@ -26,9 +26,9 @@ flowchart LR
   opf --> sd
 ```
 
-1. [`scripts/build_est_ru_df.py`](../scripts/build_est_ru_df.py) parses EVS, attaches inflections, and writes a dictutil `.df` to `dist/est-ru.df`.
+1. `build-est-ru-df` (from [`src/est_ru_df.rs`](../src/est_ru_df.rs)) parses EVS, attaches inflections, and writes a dictutil `.df` to `dist/est-ru.df`.
 2. [`scripts/build.sh`](../scripts/build.sh) runs [dictgen](https://github.com/pgaskin/dictutil) (v0.3.2) to produce `out/dicthtml-et-ru.zip`.
-3. [`scripts/build_kindle.py`](../scripts/build_kindle.py) turns that zip into Kindle OPF/XHTML under `dist/kindle/`.
+3. `build-kindle` (from [`src/kindle.rs`](../src/kindle.rs)) turns that zip into Kindle OPF/XHTML under `dist/kindle/`.
 4. [`scripts/build_kindle.sh`](../scripts/build_kindle.sh) runs [kindling-cli](https://github.com/ciscoriordan/kindling) (v0.38.0) to build `dict-et-ru.mobi`, then zips it to `out/dict-et-ru.mobi.zip`.
 5. [`scripts/build_stardict.sh`](../scripts/build_stardict.sh) uses the same OPF, gzip-compresses `.dict` to `.dict.dz`, and zips the folder to `out/stardict-et-ru.zip`.
 
@@ -63,7 +63,7 @@ Other conversion details: Russian glosses are preferred; if none exist, Estonian
 
 ## Tools
 
-- Python 3.10+
+- Rust (stable) — `cargo` builds `build-est-ru-df` and `build-kindle`
 - `curl`
 - [dictgen](https://github.com/pgaskin/dictutil) — installed with Go (`github.com/pgaskin/dictutil/cmd/dictgen@v0.3.2`) or a release binary. Apple Silicon needs Go; there is no official arm64 binary.
 - [kindling-cli](https://github.com/ciscoriordan/kindling) v0.38.0 — downloaded by the Kindle/StarDict scripts.
@@ -83,4 +83,4 @@ Kindle and StarDict (both need the Kobo zip):
 ./scripts/build_stardict.sh
 ```
 
-Run tests with `python3 -m unittest discover -s tests`.
+Run tests with `cargo test`.

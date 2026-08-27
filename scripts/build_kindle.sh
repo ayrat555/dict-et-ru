@@ -36,7 +36,8 @@ if [[ ! -x "$KINDLING" ]]; then
 fi
 
 echo "Building Kindle source from $KOBO ..."
-python3 "$ROOT/scripts/build_kindle.py" --kobo "$KOBO" --outdir "$DIST/kindle"
+cargo build --release --manifest-path "$ROOT/Cargo.toml" --bin build-kindle
+"$ROOT/target/release/build-kindle" --kobo "$KOBO" --outdir "$DIST/kindle"
 
 echo "Generating Kindle dictionary..."
 "$KINDLING" build "$DIST/kindle/dict.opf" -o "$OUT/dict-et-ru.mobi"
