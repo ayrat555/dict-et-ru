@@ -12,6 +12,10 @@ path = "src/bin/build-est-ru-df.rs"
 name = "build-kindle"
 path = "src/bin/build-kindle.rs"
 
+[[bin]]
+name = "fetch-inflections"
+path = "src/bin/fetch-inflections.rs"
+
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 crc32fast = "1"
@@ -20,4 +24,7 @@ html-escape = "0.2"
 indexmap = "2"
 regex = "1"
 roxmltree = "0.20"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", features = ["json"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }

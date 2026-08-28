@@ -5,7 +5,7 @@ The installable files in `out/` are generated from the official EKI Estonian–R
 ## Sources
 
 - **EVS XML** — [evs_EKI_CCBY40.xml](https://arhiiv.eki.ee/litsents/idkaart/evs/evs_EKI_CCBY40.xml) (~85 MB). [`scripts/build.sh`](../scripts/build.sh) downloads it to `cache/evs_EKI_CCBY40.xml` on first run. Not stored in git.
-- **Inflections** — [`data/est_inflected_forms.tsv`](../data/est_inflected_forms.tsv). Lemma → comma-separated forms from EKI / Ekilex.
+- **Inflections** — [`data/est_inflected_forms.tsv`](../data/est_inflected_forms.tsv). Lemma → comma-separated forms from [Ekilex](https://ekilex.ee), currently the [Estonian-Wordlist-Enriched-Ekilex](https://github.com/KristjanPikhof/Estonian-Wordlist-Enriched-Ekilex) snapshot. Refresh with `fetch-inflections` into `dist/` (does not overwrite this file).
 
 ## Pipeline
 
@@ -82,5 +82,20 @@ Kindle and StarDict (both need the Kobo zip):
 ./scripts/build_kindle.sh
 ./scripts/build_stardict.sh
 ```
+
+## Refresh inflections
+
+`fetch-inflections` queries the Ekilex API: search for a lemma, then read `paradigms[].forms[].value` from word details. Get a key at [ekilex.ee/userprofile](https://ekilex.ee/userprofile). By default it uses lemmas already in [`data/est_inflected_forms.tsv`](../data/est_inflected_forms.tsv) and writes a resumable checkpoint to `cache/ekilex_checkpoint.jsonl`. The new table goes to `dist/est_inflected_forms.ekilex.tsv` so you can compare before replacing the snapshot.
+
+```bash
+export EKILEX_API_KEY=your_key
+cargo run --release --bin fetch-inflections
+# later, after a stop or failure:
+cargo run --release --bin fetch-inflections
+# rebuild the TSV from an existing checkpoint only:
+cargo run --release --bin fetch-inflections -- --export-only
+```
+
+`--words file.txt` uses a custom lemma list (one word per line). `--limit N` fetches only the first N pending lemmas. A full TSV pass is two HTTP calls per lemma plus a 0.1s pause. Re-runs skip checkpointed words. `--delay 0.05` goes faster; 429s back off on their own.
 
 Run tests with `cargo test`.
