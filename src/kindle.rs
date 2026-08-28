@@ -25,11 +25,13 @@ pub struct Entry {
     pub body: String,
 }
 
-static WORD_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?s)<w>(.*?)</w>").expect("word regex"));
+static WORD_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?s)<w>(.*?)</w>").expect("word regex"));
 static NAME_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<a name="([^"]*)""#).expect("name regex"));
 static HEADER_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?s)<p>\s*<a name="[^"]*"\s*/>\s*<b>.*?</b>\s*([^<]*)</p>"#).expect("header regex")
+    Regex::new(r#"(?s)<p>\s*<a name="[^"]*"\s*/>\s*<b>.*?</b>\s*([^<]*)</p>"#)
+        .expect("header regex")
 });
 static VARIANT_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<variant name="([^"]*)""#).expect("variant regex"));
@@ -88,8 +90,7 @@ fn read_kobo_html(raw: &[u8]) -> Result<String, String> {
 
 pub fn parse_kobo_zip(path: &Path) -> Result<Vec<Entry>, String> {
     let bytes = fs::read(path).map_err(|err| format!("{path}: {err}", path = path.display()))?;
-    let mut archive =
-        ZipArchive::new(Cursor::new(bytes)).map_err(|err| format!("zip: {err}"))?;
+    let mut archive = ZipArchive::new(Cursor::new(bytes)).map_err(|err| format!("zip: {err}"))?;
     let mut grouped: indexmap::IndexMap<String, Entry> = indexmap::IndexMap::new();
     let names: Vec<String> = (0..archive.len())
         .map(|i| archive.by_index(i).map(|file| file.name().to_string()))
@@ -202,11 +203,11 @@ fn png_chunk(tag: &[u8], data: &[u8]) -> Vec<u8> {
 
 pub fn write_cover_png(path: &Path, width: u32, height: u32) -> Result<(), String> {
     let rgb = [36u8, 64, 99];
-    let mut raw = Vec::with_capacity((1 + width as usize * 3) * height as usize);
-    for _ in 0..height {
-        raw.push(0);
-        for _ in 0..width {
-            raw.extend_from_slice(&rgb);
+    let stride = 1 + width as usize * 3;
+    let mut raw = vec![0u8; stride * height as usize];
+    for row in raw.chunks_exact_mut(stride) {
+        for pixel in row[1..].as_chunks_mut::<3>().0 {
+            pixel.copy_from_slice(&rgb);
         }
     }
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::new(9));
@@ -223,11 +224,7 @@ pub fn write_cover_png(path: &Path, width: u32, height: u32) -> Result<(), Strin
     fs::write(path, png).map_err(|err| err.to_string())
 }
 
-pub fn write_kindle_source(
-    entries: &[Entry],
-    dest: &Path,
-    title: &str,
-) -> Result<PathBuf, String> {
+pub fn write_kindle_source(entries: &[Entry], dest: &Path, title: &str) -> Result<PathBuf, String> {
     fs::create_dir_all(dest).map_err(|err| err.to_string())?;
     if dest.is_dir() {
         for entry in fs::read_dir(dest).map_err(|err| err.to_string())? {
@@ -350,11 +347,13 @@ pub fn convert(kobo: &Path, outdir: &Path) -> Result<PathBuf, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use flate2::write::GzEncoder;
     use std::io::Write;
+
+    use flate2::write::GzEncoder;
     use zip::write::SimpleFileOptions;
     use zip::ZipWriter;
+
+    use super::*;
 
     const SAMPLE_HTML: &str = r#"<html><w><p><a name="aabe" /><b>aabe</b> сущ.</p><var><variant name="aape"/><variant name="aabet"/></var>
 <p><i>aabe aape aabet</i></p>
@@ -418,10 +417,7 @@ mod tests {
         );
         let dir = tempfile_dir();
         let zip_path = dir.join("dicthtml.zip");
-        write_zip(
-            &zip_path,
-            &[("sa.html", gzip_bytes(html.as_bytes()))],
-        );
+        write_zip(&zip_path, &[("sa.html", gzip_bytes(html.as_bytes()))]);
         let entries = parse_kobo_zip(&zip_path).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].headword, "sai");

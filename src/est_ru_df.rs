@@ -152,11 +152,13 @@ pub fn apply_stress(text: &str) -> String {
 pub fn clean_text(text: &str) -> String {
     let text = html_util::unescape(text).replace("&v;", " / ");
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    apply_stress(&text).trim_matches(|ch| ch == ' ' || ch == '/').to_string()
+    apply_stress(&text)
+        .trim_matches(|ch| ch == ' ' || ch == '/')
+        .to_string()
 }
 
 pub fn clean_headword(text: &str) -> String {
-    let text = text.replace('+', "").replace('"', "");
+    let text = text.replace(['+', '"'], "");
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
@@ -164,7 +166,10 @@ pub fn compound_prefix(raw_headword: &str) -> String {
     if !raw_headword.contains('+') {
         return String::new();
     }
-    let prefix = raw_headword.rsplit_once('+').map(|(left, _)| left).unwrap_or("");
+    let prefix = raw_headword
+        .rsplit_once('+')
+        .map(|(left, _)| left)
+        .unwrap_or("");
     clean_headword(prefix)
 }
 
@@ -175,7 +180,7 @@ pub fn clean_paradigm(raw: &str, prefix: &str) -> String {
         .replace('\'', "");
     let mut parts = Vec::new();
     for token in text.split_whitespace() {
-        let mut token = token.replace('[', "").replace('/', "");
+        let mut token = token.replace(['[', '/'], "");
         token = token.trim_start_matches('+').to_string();
         if token.is_empty() {
             continue;
@@ -258,10 +263,7 @@ pub fn collect_variants(entry: &Entry, inflections: &HashMap<String, Vec<String>
 pub fn iter_articles(xml: &str) -> Vec<&str> {
     let mut articles = Vec::new();
     let mut rest = xml;
-    loop {
-        let Some(start) = rest.find("<x:A") else {
-            break;
-        };
+    while let Some(start) = rest.find("<x:A") {
         let from = &rest[start..];
         let Some(end_rel) = from.find("</x:A>") else {
             break;
@@ -277,7 +279,7 @@ fn wrap_article(article: &str) -> String {
 }
 
 fn gloss_from_xg(xg: Node<'_, '_>) -> Option<String> {
-    let gloss = clean_text(&text_of(first_child(xg, "x").into()));
+    let gloss = clean_text(&text_of(first_child(xg, "x")));
     if gloss.is_empty() {
         return None;
     }
@@ -388,7 +390,7 @@ pub fn parse_article(article: &str) -> Result<Option<Entry>, roxmltree::Error> {
             }
             if let Some(np) = first_child(tp, "np") {
                 for ng in children(np, "ng") {
-                    let et = clean_text(&text_of(first_child(ng, "n").into()));
+                    let et = clean_text(&text_of(first_child(ng, "n")));
                     let qnp = first_child(ng, "qnp");
                     let rus_root = qnp.unwrap_or(ng);
                     let rus: Vec<String> = children(rus_root, "qng")
@@ -397,7 +399,8 @@ pub fn parse_article(article: &str) -> Result<Option<Entry>, roxmltree::Error> {
                         .map(|qn| clean_text(&text_of(Some(qn))))
                         .filter(|item| !item.is_empty())
                         .collect();
-                    if !et.is_empty() && !rus.is_empty() && examples.len() < MAX_EXAMPLES_PER_SENSE {
+                    if !et.is_empty() && !rus.is_empty() && examples.len() < MAX_EXAMPLES_PER_SENSE
+                    {
                         examples.push((et, rus.join(" / ")));
                     }
                 }
@@ -411,7 +414,7 @@ pub fn parse_article(article: &str) -> Result<Option<Entry>, roxmltree::Error> {
     let mut phrases = Vec::new();
     if let Some(phrases_el) = phrases_el {
         for fg in children(phrases_el, "fg") {
-            let et = clean_text(&text_of(first_child(fg, "f").into()));
+            let et = clean_text(&text_of(first_child(fg, "f")));
             let rus: Vec<String> = children(fg, "fqnp")
                 .into_iter()
                 .flat_map(|fqnp| children(fqnp, "fqng"))
@@ -708,7 +711,10 @@ pub fn convert(evs: &Path, inflections_path: &Path, output: &Path) -> Result<(),
 
     let mut inflections = HashMap::new();
     if inflections_path.is_file() {
-        eprintln!("Loading inflections from {} ...", inflections_path.display());
+        eprintln!(
+            "Loading inflections from {} ...",
+            inflections_path.display()
+        );
         inflections = load_inflections(inflections_path)?;
         let matched = entries
             .iter()
@@ -734,8 +740,9 @@ pub fn convert(evs: &Path, inflections_path: &Path, output: &Path) -> Result<(),
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
+
+    use super::*;
 
     fn article(
         word: &str,
@@ -755,9 +762,8 @@ mod tests {
         let mv_el = mv
             .map(|value| format!("<x:grg><x:mv>{value}</x:mv></x:grg>"))
             .unwrap_or_default();
-        let mut parts = format!(
-            "<x:A><x:P><x:mg><x:m{o_attr}>{word}</x:m>{sl_el}{mv_el}</x:mg></x:P><x:S>"
-        );
+        let mut parts =
+            format!("<x:A><x:P><x:mg><x:m{o_attr}>{word}</x:m>{sl_el}{mv_el}</x:mg></x:P><x:S>");
         if let Some(see) = see {
             parts.push_str(&format!("<x:tp><x:tvt>{see}</x:tvt></x:tp>"));
         }
@@ -795,7 +801,12 @@ mod tests {
 
     #[test]
     fn hyphenated_word_keeps_hyphens_and_compact_variant() {
-        let item = parse("aeg-ajalt", Some("aegajalt"), Some("adv"), Some("временами"));
+        let item = parse(
+            "aeg-ajalt",
+            Some("aegajalt"),
+            Some("adv"),
+            Some("временами"),
+        );
         assert_eq!(item.headwords, ["aeg-ajalt", "aegajalt"]);
     }
 
@@ -816,10 +827,8 @@ mod tests {
             }],
             ..Entry::default()
         };
-        let inflections = HashMap::from([(
-            "a".into(),
-            vec!["aga".into(), "as".into(), "al".into()],
-        )]);
+        let inflections =
+            HashMap::from([("a".into(), vec!["aga".into(), "as".into(), "al".into()])]);
         assert!(collect_variants(&entry, &inflections).is_empty());
     }
 

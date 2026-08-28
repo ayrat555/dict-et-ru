@@ -90,9 +90,7 @@ impl<T: Transport> EkilexClient<T> {
     }
 
     fn throttle(&mut self) {
-        let wait = self
-            .delay
-            .saturating_sub(self.last_request.elapsed());
+        let wait = self.delay.saturating_sub(self.last_request.elapsed());
         if !wait.is_zero() {
             thread::sleep(wait);
         }
@@ -472,7 +470,9 @@ pub fn append_checkpoint(path: &Path, item: &CheckpointItem) -> Result<(), Strin
     .map_err(|err| err.to_string())
 }
 
-pub fn mapping_from_checkpoint(entries: &HashMap<String, CheckpointItem>) -> HashMap<String, Vec<String>> {
+pub fn mapping_from_checkpoint(
+    entries: &HashMap<String, CheckpointItem>,
+) -> HashMap<String, Vec<String>> {
     let mut mapping = HashMap::new();
     for (word, item) in entries {
         let mut forms = Vec::new();
@@ -497,7 +497,7 @@ pub fn write_tsv(mapping: &HashMap<String, Vec<String>>, dest: &Path) -> Result<
         fs::create_dir_all(parent).map_err(|err| err.to_string())?;
     }
     let mut keys: Vec<&String> = mapping.keys().collect();
-    keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    keys.sort_by_key(|a| a.to_lowercase());
     let mut file = File::create(dest).map_err(|err| err.to_string())?;
     writeln!(file, "word\tforms").map_err(|err| err.to_string())?;
     for word in keys {
@@ -534,17 +534,17 @@ pub fn run_fetch<T: Transport>(
     args: &FetchArgs,
     transport: T,
 ) -> Result<HashMap<String, CheckpointItem>, String> {
-    let source = args
-        .words
-        .as_ref()
-        .unwrap_or(&args.lemmas);
+    let source = args.words.as_ref().unwrap_or(&args.lemmas);
     log_line(format!("Loading lemmas from {} ...", source.display()));
     let mut words = collect_words(args)?;
     if args.limit > 0 {
         words.truncate(args.limit);
         log_line(format!("Limited to first {} lemmas", words.len()));
     }
-    log_line(format!("Loading checkpoint {} ...", args.checkpoint.display()));
+    log_line(format!(
+        "Loading checkpoint {} ...",
+        args.checkpoint.display()
+    ));
     let mut checkpoint = load_checkpoint(&args.checkpoint)?;
     let pending: Vec<String> = words
         .iter()
@@ -565,11 +565,7 @@ pub fn run_fetch<T: Transport>(
         log_line("Nothing to fetch");
         return Ok(checkpoint);
     }
-    let api_key_missing = args
-        .api_key
-        .as_deref()
-        .map(str::is_empty)
-        .unwrap_or(true);
+    let api_key_missing = args.api_key.as_deref().map(str::is_empty).unwrap_or(true);
     if api_key_missing {
         return Err(
             "Ekilex API key missing. Set EKILEX_API_KEY or pass --api-key (https://ekilex.ee/userprofile)."
@@ -643,7 +639,10 @@ pub fn export_checkpoint(
     let count = mapping.len();
     let forms = mapping.values().map(Vec::len).sum::<usize>();
     write_tsv(&mapping, dest)?;
-    log_line(format!("Wrote {} ({count} lemmas, {forms} forms)", dest.display()));
+    log_line(format!(
+        "Wrote {} ({count} lemmas, {forms} forms)",
+        dest.display()
+    ));
     Ok(count)
 }
 
@@ -652,7 +651,11 @@ pub fn convert(args: FetchArgs) -> Result<(), String> {
         .api_key
         .clone()
         .filter(|key| !key.is_empty())
-        .or_else(|| std::env::var("EKILEX_API_KEY").ok().filter(|k| !k.is_empty()));
+        .or_else(|| {
+            std::env::var("EKILEX_API_KEY")
+                .ok()
+                .filter(|k| !k.is_empty())
+        });
     let transport = UreqTransport {
         api_key: api_key.clone().unwrap_or_default(),
     };
@@ -665,9 +668,10 @@ pub fn convert(args: FetchArgs) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::RefCell;
     use std::path::PathBuf;
+
+    use super::*;
 
     fn search_payload() -> Value {
         serde_json::json!({
@@ -786,10 +790,7 @@ mod tests {
         )
         .unwrap();
         let entries = load_checkpoint(&path).unwrap();
-        assert_eq!(
-            entries["olema"].inflected_forms,
-            ["olla", "olnud"]
-        );
+        assert_eq!(entries["olema"].inflected_forms, ["olla", "olnud"]);
     }
 
     struct ScriptedTransport {

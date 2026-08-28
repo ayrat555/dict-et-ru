@@ -40,7 +40,7 @@ Unzip [`out/stardict-et-ru.zip`](out/stardict-et-ru.zip) and copy the `stardict-
 | `out/dict-et-ru.mobi.zip` | Kindle dictionary (unzip, then copy the `.mobi`) |
 | `out/stardict-et-ru.zip` | StarDict bundle for KOReader, GoldenDict, sdcv (unzip first) |
 
-How the files are produced: [docs/build.md](docs/build.md).
+How the files are produced: [docs/build.md](docs/build.md). Notable changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
